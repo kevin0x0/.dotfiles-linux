@@ -1,0 +1,30 @@
+include control
+
+# Fast start
+bindsym {
+  # Start with prime-run
+  $mod+Shift+d exec prime-run $menu
+}
+
+mode "start" {
+  bindsym {
+    # Start proxy
+    $mod+p exec proxy-start-gui; mode "default"
+  }
+}
+
+# Kill
+mode "stop" {
+  bindsym {
+    # Kill proxy
+    $mod+p exec proxy-stop-gui; mode "default"
+  }
+}
+mode "settings" {
+  bindsym {
+    # Set wireless connection
+    $mod+period exec \"${XDG_CONFIG_HOME:-$HOME/.config}/sway/scripts/wifi-connect\"; mode "default"
+  }
+}
+
+# vim: ft=swayconfig

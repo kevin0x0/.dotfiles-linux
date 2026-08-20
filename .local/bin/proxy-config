@@ -1,0 +1,21 @@
+#!/bin/sh
+
+error() {
+  printf "%s\n" "$1" >&2
+  exit 1
+}
+
+CLASH_CONFIG_HOME=${XDG_CONFIG_HOME:=$HOME/.config}/clash
+CLASH_SUBSCRIPTION_URL=$1
+
+if [ -z "$CLASH_SUBSCRIPTION_URL" ]; then
+  error "subscription url not provided"
+fi
+
+if ! [ -d "$CLASH_CONFIG_HOME" ]; then
+  error "$CLASH_CONFIG_HOME does not exist"
+fi
+
+if ! curl -Ss -- "$CLASH_SUBSCRIPTION_URL" \
+  | cat -- - "$CLASH_CONFIG_HOME/tun.yaml" >"$CLASH_CONFIG_HOME/config.yaml"; then
+fi

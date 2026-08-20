@@ -1,0 +1,20 @@
+bindir=~/.local/bin
+mkdir -p -- "$bindir"
+
+if [ -e "$bindir/clash" ]; then
+  info "$bindir/clash exists, skip installation"
+else
+  if ! err=$(proxy-install 2>&1); then
+    error "error from proxy-install: $err"
+  fi
+fi
+
+if [ -z "$CLASH_SUBSCRIPTION_URL" ]; then
+  info "environment variable CLASH_SUBSCRIPTION_URL not provided, skip configuration"
+else
+  if ! err=$(proxy-config "$CLASH_SUBSCRIPTION_URL" 2>&1); then
+    error "error from proxy-config: $err"
+  fi
+fi
+
+# vim: ft=sh

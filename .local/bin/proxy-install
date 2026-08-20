@@ -1,0 +1,37 @@
+#!/bin/sh
+
+opt_force_installation=
+while getopts "f" opt; do
+  case $opt in
+    f)
+      opt_force_installation=1
+      ;;
+    \?)
+      exit 2
+      ;;
+  esac
+done
+
+case $(uname -m) in
+  x86_64)
+    ;;
+  *)
+    if [ -z "$opt_force_installation" ]; then
+      printf "not available on %s machine(use 'proxy-install -f' to force installation)\n" "$(uname -m)" >&2
+      exit 1
+    fi
+    ;;
+esac
+
+BIN_DIR=~/.local/bin
+
+if [ -z "$CLASH_DOWNLOAD_URL" ]; then
+  CLASH_DOWNLOAD_URL=https://raw.githubusercontent.com/kevin0x0/clash-premium/refs/heads/main/clash-linux-amd64-v3-2023.08.17.gz
+fi
+
+if ! curl -Ss -- "$CLASH_DOWNLOAD_URL" | gunzip >"$BIN_DIR/clash"; then
+  [ -e "$BIN_DIR/clash" ] && rm -- "$BIN_DIR/clash" 
+  exit 1
+fi
+
+chmod u+x "$BIN_DIR/clash"
