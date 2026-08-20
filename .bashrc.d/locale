@@ -1,0 +1,5 @@
+if [ "$TERM" = linux ]; then
+  LANG=C.UTF-8
+fi
+
+# vim: ft=bash
