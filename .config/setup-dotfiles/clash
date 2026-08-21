@@ -1,11 +1,16 @@
 bindir=~/.local/bin
 mkdir -p -- "$bindir"
 
+if [ -n "$SKIP_CLASH_SETUP" ]; then
+  info "environment variable SKIP_CLASH_SETUP set, skip clash setup"
+  return
+fi
+
 if [ -e "$bindir/clash" ]; then
   info "$bindir/clash exists, skip installation"
 else
   if ! err=$(proxy-install 2>&1); then
-    error "error from proxy-install: $err"
+    error "error from proxy-install: $err" "you can set SKIP_CLASH_SETUP=1 to skip clash setup"
   fi
 fi
 
