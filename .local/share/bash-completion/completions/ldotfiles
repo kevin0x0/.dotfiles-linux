@@ -1,0 +1,4 @@
+_comp_load git || return
+eval "$(complete -p git | sed 's/\<git\>/ldotfiles/')"
+
+# vim: ft=bash
