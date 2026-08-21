@@ -1,11 +1,5 @@
 include control
 
-# Fast start
-bindsym {
-  # Start with prime-run
-  $mod+Shift+d exec prime-run $menu
-}
-
 mode "start" {
   bindsym {
     # Start proxy
