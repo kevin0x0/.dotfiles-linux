@@ -4,7 +4,7 @@ busctl introspect the bus
 gunzip compress or expand files
 sudo execute a command as another user
 fzf fuzzy finder
-iwd internet wireless daemon
+iwctl internet wireless control utility
 "
 
 optional="\
