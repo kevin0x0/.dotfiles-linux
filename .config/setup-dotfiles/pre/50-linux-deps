@@ -1,0 +1,35 @@
+required="\
+ip manage network devices, interfaces and tunnels
+busctl introspect the bus
+gunzip compress or expand files
+sudo execute a command as another user
+fzf fuzzy finder
+"
+
+optional="\
+i3blocks a feed generator for text based status bars
+"
+
+check_availability() {
+  header_outputed=
+  while read -r cmd description; do
+    if ! command -v -- "$cmd" >/dev/null 2>&1; then
+      if [ -z "$header_outputed" ]; then
+        header_outputed=1
+        "$1" "the following commands is $2:"
+      fi
+      "$1" "$cmd: $description"
+    fi
+  done
+
+  [ -z "$header_outputed" ]
+  exit
+}
+
+if printf "%s" "$required" | check_availability error "required but not available"; then
+  error_exit "stopped"
+fi
+
+printf "%s" "$optional" | check_availability info "optional"
+
+# vim: ft=sh
