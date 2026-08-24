@@ -50,10 +50,10 @@ else
   esac
 fi
 
-n
 if command -v notify-send >/dev/null 2>&1; then
   notify-send --app-name "proxy-stop-gui" --urgency="$urgency" -- "$summary" "$body"
 else
   if [ "$urgency" = critical ]; then
     ring-bell
   fi
+fi
