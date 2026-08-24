@@ -1,5 +1,0 @@
-required for wireless control
-true
-
-busctl introspect the bus
-fzf fuzzy finder

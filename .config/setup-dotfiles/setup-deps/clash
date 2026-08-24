@@ -1,5 +1,0 @@
-required for clash setup
-[ -z "$SKIP_CLASH_SETUP" ]
-
-curl transfer a URL
-gunzip compress or expand files

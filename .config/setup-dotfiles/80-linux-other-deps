@@ -1,0 +1,7 @@
+helper_check_deps warning "the following commands are required for wireless control:" <<'EOF'
+busctl introspect the bus
+fzf fuzzy finder
+jq command-line json processor
+EOF
+
+# vim: ft=sh

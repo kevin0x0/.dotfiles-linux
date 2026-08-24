@@ -6,20 +6,51 @@ if [ -n "$SKIP_CLASH_SETUP" ]; then
   return
 fi
 
+check_install_deps() {
+    helper_check_deps error "the following commands are required for installing clash:" <<'EOF'
+curl transfer a URL
+gunzip compress or expand file
+EOF
+}
+
+clash_used=
 if [ -e "$bindir/clash" ]; then
   info "$bindir/clash exists, skip installation"
 else
+  check_install_deps || error_exit "stopped"
   if ! err=$(proxy-install 2>&1); then
     error_exit "error from proxy-install: $err" "you can set SKIP_CLASH_SETUP=1 to skip clash setup"
   fi
+  clash_used=1
 fi
+
+check_config_eps() {
+    helper_check_deps error "the following commands are required for configuring clash:" <<'EOF'
+curl transfer a URL
+EOF
+}
 
 if [ -z "$CLASH_SUBSCRIPTION_URL" ]; then
   info "environment variable CLASH_SUBSCRIPTION_URL not provided, skip configuration"
 else
+  check_config_deps || error_exit "stopped"
   if ! err=$(proxy-config "$CLASH_SUBSCRIPTION_URL" 2>&1); then
     error_exit "error from proxy-config: $err"
   fi
+  clash_used=1
 fi
+
+if [ -n "$clash_used" ]; then
+  helper_check_deps warning "the following commands are required for scrits starting clash proxy:" <<'EOF'
+sudo execute a command as another user
+EOF
+
+  helper_check_deps warning "the following commands are required for scrits controlling clash:" <<'EOF'
+jq command-line json processor
+curl transfer a URL
+EOF
+fi
+
+return 0
 
 # vim: ft=sh
