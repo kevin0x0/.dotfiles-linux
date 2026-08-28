@@ -3,7 +3,7 @@
 lockfile="$XDG_RUNTIME_DIR/clash.pid.lock"
 while ! (umask 0077; set -C; : >"$lockfile") 2>/dev/null; do
   echo "Another operation is in progress." >&2
-  sleep 0.3
+  sleep 1
 done
 
 trap 'rm "$lockfile"' EXIT
