@@ -1,24 +1,51 @@
 #!/bin/sh
 
-lockfile="$XDG_RUNTIME_DIR/clash.pid.lock"
-while ! (umask 0077; set -C; : >"$lockfile") 2>/dev/null; do
-  echo "Another operation is in progress." >&2
-  sleep 1
-done
+daemonpidfile="$XDG_RUNTIME_DIR/proxy-daemon-pid"
 
-trap 'rm "$lockfile"' EXIT
+trylock() {
+  [ -z "$1" ] && lockfile=$XDG_RUNTIME_DIR/proxy-lock || lockfile=$XDG_RUNTIME_DIR/proxy-${1}-lock
+  (umask 0077; set -C; : >"$lockfile") 2>/dev/null
+}
 
-# If no clash process is running, exit with code 64
-if ! pid=$(cat "$XDG_RUNTIME_DIR/clash.pid" 2>/dev/null); then
-  echo "There are no instance of proxy is running." >&2
-  exit 64
-fi
+unlock() {
+  [ -z "$1" ] && lockfile=$XDG_RUNTIME_DIR/proxy-lock || lockfile=$XDG_RUNTIME_DIR/proxy-${1}-lock
+  rm -- "$lockfile"
+}
 
-sudo "$@" kill "$pid"
-exitcode=$?
-if [ "$exitcode" -eq 0 ]; then
-  rm "$XDG_RUNTIME_DIR/clash.pid"
-  exit 0
-else
-  exit "$exitcode"
-fi
+lock() {
+  while ! trylock "$1"; do
+    echo "Another operation is in progress." >&2
+    sleep 1
+  done
+}
+
+msg() {
+  summary=$1
+  body=$2
+  if command -v notify-send >/dev/null 2>&1 && [ -n "$DISPLAY$WAYLAND_DISPLAY" ]; then
+    [ "$3" = 2 ] && urgency=critical || urgency=normal
+    notify-send --app-name proxy-stop --urgency "$urgency" -- "$summary" "$body"
+  else
+    printf "%s: %s\n" "$summary" "$body" >&"${3:-1}"
+  fi
+}
+
+instance_not_exists() {
+  summary=Failure
+  body="No running proxy instance"
+  case ${LC_ALL:-$LANG} in
+    zh_CN.UTF-8)
+      summary="失败"
+      body="没有正在运行的代理实例"
+      ;;
+  esac
+  msg "$summary" "$body" "2"
+}
+
+lock
+
+[ -f "$daemonpidfile" ] || { instance_not_exists; unlock; exit 1; }
+
+kill -USR1 "$(cat -- "$daemonpidfile")"
+
+unlock

@@ -11,7 +11,7 @@ mode "start" {
 mode "stop" {
   bindsym {
     # Kill proxy
-    $mod+p exec proxy-stop-gui; mode "default"
+    $mod+p exec proxy-stop; mode "default"
   }
 }
 mode "settings" {

@@ -1,28 +1,171 @@
 #!/bin/sh
 
-lockfile="$XDG_RUNTIME_DIR/clash.pid.lock"
-while ! (umask 0077; set -C; : >"$lockfile") 2>/dev/null; do
-  echo "Another operation is in progress." >&2
-  sleep 1
+daemonpidfile="$XDG_RUNTIME_DIR/proxy-daemon-pid"
+startedfile="$XDG_RUNTIME_DIR/proxy-started"
+stoppedfile="$XDG_RUNTIME_DIR/proxy-stopped"
+
+trylock() {
+  [ -z "$1" ] && lockfile=$XDG_RUNTIME_DIR/proxy-lock || lockfile=$XDG_RUNTIME_DIR/proxy-${1}-lock
+  (umask 0077; set -C; : >"$lockfile") 2>/dev/null
+}
+
+unlock() {
+  [ -z "$1" ] && lockfile=$XDG_RUNTIME_DIR/proxy-lock || lockfile=$XDG_RUNTIME_DIR/proxy-${1}-lock
+  rm -- "$lockfile"
+}
+
+lock() {
+  while ! trylock "$1"; do
+    echo "Another operation is in progress." >&2
+    sleep 1
+  done
+}
+
+msg() {
+  summary=$1
+  body=$2
+  if command -v notify-send >/dev/null 2>&1 && [ -n "$DISPLAY$WAYLAND_DISPLAY" ]; then
+    [ "$3" = 2 ] && urgency=critical || urgency=normal
+    notify-send --app-name proxy-start --urgency "$urgency" -- "$summary" "$body"
+  else
+    printf "%s: %s\n" "$summary" "$body" >&"${3:-1}"
+  fi
+}
+
+instance_exists() {
+  summary=Failure
+  body="A proxy instance is already runing"
+  case ${LC_ALL:-$LANG} in
+    zh_CN.UTF-8)
+      summary="失败"
+      body="已有proxy实例在运行"
+      ;;
+  esac
+  msg "$summary" "$body" "2"
+}
+
+clash_not_found() {
+  summary=Failure
+  body="Clash not fould"
+  case ${LC_ALL:-$LANG} in
+    zh_CN.UTF-8)
+      summary="失败"
+      body="Clash 未找到"
+      ;;
+  esac
+  msg "$summary" "$body" "2"
+}
+
+proxy_stopped() {
+  summary="Success"
+  body="Proxy stopped"
+  case ${LC_ALL:-$LANG} in
+    zh_CN.UTF-8)
+      summary="成功"
+      body="代理已停止"
+      ;;
+  esac
+  msg "$summary" "$body" "1"
+}
+
+proxy_started() {
+  summary="Success"
+  body="Proxy is started"
+  case ${LC_ALL:-$LANG} in
+    zh_CN.UTF-8)
+      summary="成功"
+      body="proxy 已启动"
+      ;;
+  esac
+  msg "$summary" "$body" "1"
+}
+
+proxy_not_started() {
+  summary="Failure"
+  body="Proxy not started"
+  case ${LC_ALL:-$LANG} in
+    zh_CN.UTF-8)
+      summary="失败"
+      body="代理未启动"
+      ;;
+  esac
+  msg "$summary" "$body" "2"
+}
+
+proxy_crashed() {
+  summary="Error"
+  body="Proxy exited abnormally"
+  case ${LC_ALL:-$LANG} in
+    zh_CN.UTF-8)
+      summary="失败"
+      body="代理异常退出"
+      ;;
+  esac
+  msg "$summary" "$body" "2"
+}
+
+proxy_exited_normally() {
+  summary="Unexpected behaviour"
+  body="Proxy exited normally"
+  case ${LC_ALL:-$LANG} in
+    zh_CN.UTF-8)
+      summary="异常行为"
+      body="代理静默退出"
+      ;;
+  esac
+  msg "$summary" "$body" "2"
+}
+
+opt_askpass=
+while getopts "p" opts; do
+  case $opts in
+    p)
+      opt_askpass=--askpass
+      ;;
+    '?')
+      exit 2
+      ;;
+  esac
 done
 
-trap 'rm "$lockfile"' EXIT
+lock
+trylock daemon || { instance_exists; unlock; exit 1; }
 
-# If then clash is already started, exit with code 64
-if ! (umask 0077; set -C; : >"$XDG_RUNTIME_DIR/clash.pid") 2>/dev/null; then
-  echo "An instance of proxy is already running." >&2
-  exit 64
-fi
+CLASH_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}/clash
+CLASH_BIN=$(command -v clash) || { clash_not_found; unlock daemon; unlock; exit 1; }
 
-export CLASH_CONFIG_HOME=${XDG_CONFIG_HOME:=$HOME/.config}/clash
-export CLASH_BIN=~/.local/bin/clash
+[ -e "$startedfile" ] && rm -f -- "$startedfile"
+[ -e "$stoppedfile" ] && rm -f -- "$stoppedfile"
+trap ': >"$startedfile"; proxy_started' USR2
 
-sudo --preserve-env=CLASH_CONFIG_HOME,CLASH_BIN,XDG_RUNTIME_DIR --background \
-  "$@" sh -c 'printf "%d" "$$" >"$XDG_RUNTIME_DIR/clash.pid"
-  exec nohup "$CLASH_BIN" -d "$CLASH_CONFIG_HOME" >/dev/null 2>&1'
-exitcode=$?
+sudo $opt_askpass -- sh -c 'kill -USR2 "$1"; shift 1; exec "$@"' -- \
+  "$$" "$CLASH_BIN" -d "$CLASH_CONFIG_HOME" &
+pid=$!
 
-if [ "$exitcode" -ne 0 ]; then
-  rm -- "$XDG_RUNTIME_DIR/clash.pid"
-  exit "$exitcode"
-fi
+trap '([ -e "$startedfile" ] || exit 0; (set -C; : >"$stoppedfile") 2>/dev/null || exit 0; sudo $opt_askpass kill "$pid"; proxy_stopped)' USR1 INT
+[ -e "$daemonpidfile" ] && rm -- "$daemonpidfile"
+printf "%d\n" "$$" >"$daemonpidfile"
+
+unlock
+
+while :; do
+  wait "$pid"
+  exitcode=$?
+  if [ "$exitcode" -gt 128 ]; then
+    [ -e "$stoppedfile" ] && break
+  elif [ "$exitcode" -ne 0 ]; then
+    [ ! -e "$startedfile" ] && proxy_not_started || proxy_crashed
+    break
+  else
+    proxy_exited_normally
+    break
+  fi
+done
+
+[ -e "$startedfile" ] && rm -f -- "$startedfile"
+[ -e "$stoppedfile" ] && rm -f -- "$stoppedfile"
+
+lock
+rm -- "$daemonpidfile"
+unlock daemon
+unlock
