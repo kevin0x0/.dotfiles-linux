@@ -5,23 +5,6 @@ daemonpidfile="$RUNTIME_STATE_DIR/proxy-daemon-pid"
 startedfile="$RUNTIME_STATE_DIR/proxy-started"
 stoppedfile="$RUNTIME_STATE_DIR/proxy-stopped"
 
-trylock() {
-  [ -z "$1" ] && lockfile=$RUNTIME_STATE_DIR/proxy-lock || lockfile=$RUNTIME_STATE_DIR/proxy-${1}-lock
-  (umask 0077; set -C; : >"$lockfile") 2>/dev/null
-}
-
-unlock() {
-  [ -z "$1" ] && lockfile=$RUNTIME_STATE_DIR/proxy-lock || lockfile=$RUNTIME_STATE_DIR/proxy-${1}-lock
-  rm -- "$lockfile"
-}
-
-lock() {
-  while ! trylock "$1"; do
-    echo "Another operation is in progress." >&2
-    sleep 1
-  done
-}
-
 msg() {
   summary=$1
   body=$2
@@ -129,11 +112,11 @@ while getopts "p" opts; do
   esac
 done
 
-lock
-trylock daemon || { instance_exists; unlock; exit 1; }
+lock proxy-main
+trylock proxy-daemon || { instance_exists; unlock proxy-main; exit 1; }
 
 CLASH_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}/clash
-CLASH_BIN=$(command -v clash) || { clash_not_found; unlock daemon; unlock; exit 1; }
+CLASH_BIN=$(command -v clash) || { clash_not_found; unlock proxy-daemon proxy-main; exit 1; }
 
 [ -e "$startedfile" ] && rm -f -- "$startedfile"
 [ -e "$stoppedfile" ] && rm -f -- "$stoppedfile"
@@ -147,7 +130,7 @@ trap '([ -e "$startedfile" ] || exit 0; (set -C; : >"$stoppedfile") 2>/dev/null 
 [ -e "$daemonpidfile" ] && rm -- "$daemonpidfile"
 printf "%d\n" "$$" >"$daemonpidfile"
 
-unlock
+unlock proxy-main
 
 while :; do
   wait "$pid"
@@ -166,7 +149,6 @@ done
 [ -e "$startedfile" ] && rm -f -- "$startedfile"
 [ -e "$stoppedfile" ] && rm -f -- "$stoppedfile"
 
-lock
+lock proxy-main
 rm -- "$daemonpidfile"
-unlock daemon
-unlock
+unlock proxy-daemon proxy-main

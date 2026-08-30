@@ -1,24 +1,6 @@
 #!/bin/sh
 
-RUNTIME_STATE_DIR=${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}
-daemonpidfile="$RUNTIME_STATE_DIR/proxy-daemon-pid"
-
-trylock() {
-  [ -z "$1" ] && lockfile=$RUNTIME_STATE_DIR/proxy-lock || lockfile=$RUNTIME_STATE_DIR/proxy-${1}-lock
-  (umask 0077; set -C; : >"$lockfile") 2>/dev/null
-}
-
-unlock() {
-  [ -z "$1" ] && lockfile=$RUNTIME_STATE_DIR/proxy-lock || lockfile=$RUNTIME_STATE_DIR/proxy-${1}-lock
-  rm -- "$lockfile"
-}
-
-lock() {
-  while ! trylock "$1"; do
-    echo "Another operation is in progress." >&2
-    sleep 1
-  done
-}
+daemonpidfile="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/proxy-daemon-pid"
 
 msg() {
   summary=$1
@@ -43,10 +25,10 @@ instance_not_exists() {
   msg "$summary" "$body" "2"
 }
 
-lock
+lock proxy-main
 
-[ -f "$daemonpidfile" ] || { instance_not_exists; unlock; exit 1; }
+[ -f "$daemonpidfile" ] || { instance_not_exists; unlock proxy-main; exit 1; }
 
 kill -USR1 "$(cat -- "$daemonpidfile")"
 
-unlock
+unlock proxy-main
