@@ -4,4 +4,6 @@ fzf fuzzy finder
 jq command-line json processor
 EOF
 
+return 0
+
 # vim: ft=sh
