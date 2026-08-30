@@ -1,14 +1,15 @@
 #!/bin/sh
 
-daemonpidfile="$XDG_RUNTIME_DIR/proxy-daemon-pid"
+RUNTIME_STATE_DIR=${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}
+daemonpidfile="$RUNTIME_STATE_DIR/proxy-daemon-pid"
 
 trylock() {
-  [ -z "$1" ] && lockfile=$XDG_RUNTIME_DIR/proxy-lock || lockfile=$XDG_RUNTIME_DIR/proxy-${1}-lock
+  [ -z "$1" ] && lockfile=$RUNTIME_STATE_DIR/proxy-lock || lockfile=$RUNTIME_STATE_DIR/proxy-${1}-lock
   (umask 0077; set -C; : >"$lockfile") 2>/dev/null
 }
 
 unlock() {
-  [ -z "$1" ] && lockfile=$XDG_RUNTIME_DIR/proxy-lock || lockfile=$XDG_RUNTIME_DIR/proxy-${1}-lock
+  [ -z "$1" ] && lockfile=$RUNTIME_STATE_DIR/proxy-lock || lockfile=$RUNTIME_STATE_DIR/proxy-${1}-lock
   rm -- "$lockfile"
 }
 
