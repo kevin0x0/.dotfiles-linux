@@ -1,6 +1,6 @@
 #!/bin/sh
 
-wifi-connect-core riced-menu -l 8
+wifi-connect-core menu-wrapper dmenu -v
 
 exitcode=$?
 
