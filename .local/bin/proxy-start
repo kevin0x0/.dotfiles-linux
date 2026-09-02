@@ -76,6 +76,18 @@ proxy_not_started() {
   msg "$summary" "$body" "2"
 }
 
+proxy_not_stopped() {
+  summary="Failure"
+  body="Proxy not stopped"
+  case ${LC_ALL:-$LANG} in
+    zh_CN.UTF-8)
+      summary="失败"
+      body="代理未停止"
+      ;;
+  esac
+  msg "$summary" "$body" "2"
+}
+
 proxy_crashed() {
   summary="Error"
   body="Proxy exited abnormally"
@@ -98,6 +110,19 @@ proxy_exited_normally() {
       ;;
   esac
   msg "$summary" "$body" "2"
+}
+
+stop_proxy() {
+  [ -e "$startedfile" ] || return 0
+
+  (set -C; : >"$stoppedfile") 2>/dev/null || return 0
+
+  if sudo $opt_askpass kill "$pid"; then
+    proxy_stopped
+  else
+    proxy_not_stopped
+    rm -- "$stoppedfile"
+  fi
 }
 
 opt_askpass=
@@ -126,7 +151,7 @@ sudo $opt_askpass -- sh -c 'kill -USR2 "$1"; shift 1; exec "$@"' -- \
   "$$" "$CLASH_BIN" -d "$CLASH_CONFIG_HOME" &
 pid=$!
 
-trap '([ -e "$startedfile" ] || exit 0; (set -C; : >"$stoppedfile") 2>/dev/null || exit 0; sudo $opt_askpass kill "$pid"; proxy_stopped)' USR1 INT
+trap 'stop_proxy' USR1 INT
 [ -e "$daemonpidfile" ] && rm -- "$daemonpidfile"
 printf "%d\n" "$$" >"$daemonpidfile"
 
