@@ -29,6 +29,6 @@ lock proxy-main
 
 [ -f "$daemonpidfile" ] || { instance_not_exists; unlock proxy-main; exit 1; }
 
-kill -USR1 "$(cat -- "$daemonpidfile")"
+kill -s USR1 "$(cat -- "$daemonpidfile")"
 
 unlock proxy-main

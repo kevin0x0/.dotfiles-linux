@@ -147,7 +147,7 @@ CLASH_BIN=$(command -v clash) || { clash_not_found; unlock proxy-daemon proxy-ma
 [ -e "$stoppedfile" ] && rm -f -- "$stoppedfile"
 trap ': >"$startedfile"; proxy_started' USR2
 
-sudo $opt_askpass -- sh -c 'kill -USR2 "$1"; shift 1; exec "$@"' -- \
+sudo $opt_askpass -- sh -c 'kill -s USR2 "$1"; shift 1; exec "$@"' -- \
   "$$" "$CLASH_BIN" -d "$CLASH_CONFIG_HOME" &
 pid=$!
 
