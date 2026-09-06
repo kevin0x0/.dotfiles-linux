@@ -2,8 +2,8 @@
 
 RUNTIME_STATE_DIR=${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}
 daemonpidfile="$RUNTIME_STATE_DIR/proxy-daemon-pid"
-startedfile="$RUNTIME_STATE_DIR/proxy-started"
-stoppedfile="$RUNTIME_STATE_DIR/proxy-stopped"
+notify_start="$RUNTIME_STATE_DIR/proxy-started"
+notify_stop="$RUNTIME_STATE_DIR/proxy-stopped"
 
 msg() {
   summary=$1
@@ -113,16 +113,7 @@ proxy_exited_normally() {
 }
 
 stop_proxy() {
-  [ -e "$startedfile" ] || return 0
-
-  (set -C; : >"$stoppedfile") 2>/dev/null || return 0
-
-  if sudo $opt_askpass kill "$pid"; then
-    proxy_stopped
-  else
-    proxy_not_stopped
-    rm -- "$stoppedfile"
-  fi
+  sudo $opt_askpass -- sh -c 'kill -s 0 "$1" && kill "$1"' --  "$pid"
 }
 
 opt_askpass=
@@ -143,36 +134,86 @@ trylock proxy-daemon || { instance_exists; unlock proxy-main; exit 1; }
 CLASH_CONFIG_HOME=${XDG_CONFIG_HOME:-$HOME/.config}/clash
 CLASH_BIN=$(command -v clash) || { clash_not_found; unlock proxy-daemon proxy-main; exit 1; }
 
-[ -e "$startedfile" ] && rm -f -- "$startedfile"
-[ -e "$stoppedfile" ] && rm -f -- "$stoppedfile"
-trap ': >"$startedfile"; proxy_started' USR2
+[ -e "$notify_start" ] && rm -f -- "$notify_start"
+[ -e "$notify_stop" ] && rm -f -- "$notify_stop"
+trap ': >"$notify_start"' USR2
 
 sudo $opt_askpass -- sh -c 'kill -s USR2 "$1"; shift 1; exec "$@"' -- \
   "$$" "$CLASH_BIN" -d "$CLASH_CONFIG_HOME" &
 pid=$!
 
-trap 'stop_proxy' USR1 INT
+trap ': >"$notify_stop"' USR1 INT
 [ -e "$daemonpidfile" ] && rm -- "$daemonpidfile"
 printf "%d\n" "$$" >"$daemonpidfile"
 
+trap '' HUP
+# wake up every 5 seconds to check whether there is any state changed.
+(trap 'exit 0' TERM; trap '' HUP; while sleep 5; do kill -s HUP "$$"; done)&
+timerpid=$!
+
 unlock proxy-main
 
+state=starting
 while :; do
   wait "$pid"
   exitcode=$?
-  if [ "$exitcode" -gt 128 ]; then
-    [ -e "$stoppedfile" ] && break
-  elif [ "$exitcode" -ne 0 ]; then
-    [ ! -e "$startedfile" ] && proxy_not_started || proxy_crashed
-    break
-  else
-    proxy_exited_normally
-    break
-  fi
+
+  case "$state" in
+    starting)
+      if [ "$exitcode" -gt 128 ]; then
+        if [ -e "$notify_start" ]; then
+          proxy_started
+          state=running
+        fi
+      elif [ "$exitcode" -ne 0 ]; then
+        proxy_not_started
+        state=stopped
+      else
+        proxy_exited_normally
+        state=stopped
+      fi
+      ;;
+    running)
+      if [ "$exitcode" -gt 128 ]; then
+        [ -e "$notify_stop" ] || continue
+        if stop_proxy; then
+          state=stopping
+        else
+          proxy_not_stopped
+          rm -- "$notify_stop"
+        fi
+      elif [ "$exitcode" -ne 0 ]; then
+        proxy_crashed
+        state=crashed
+      else
+        proxy_exited_normally
+        state=stopped
+      fi
+      ;;
+    stopping)
+      if [ "$exitcode" -gt 128 ]; then
+        continue
+      elif [ "$exitcode" -ne 0 ]; then
+        proxy_crashed
+        state=crashed
+      else
+        proxy_stopped
+        state=stopped
+      fi
+      ;;
+    stopped|crashed)
+      [ -e "$notify_start" ] && rm -f -- "$notify_start"
+      [ -e "$notify_stop" ] && rm -f -- "$notify_stop"
+      break
+      ;;
+  esac
 done
 
-[ -e "$startedfile" ] && rm -f -- "$startedfile"
-[ -e "$stoppedfile" ] && rm -f -- "$stoppedfile"
+kill "$timerpid"
+while :; do
+  wait "$timerpid"
+  [ "$?" -gt 128 ] || break
+done
 
 lock proxy-main
 rm -- "$daemonpidfile"
