@@ -3,7 +3,8 @@
 RUNTIME_STATE_DIR=${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}
 daemonpidfile="$RUNTIME_STATE_DIR/proxy-daemon-pid"
 notify_start="$RUNTIME_STATE_DIR/proxy-started"
-notify_stop="$RUNTIME_STATE_DIR/proxy-stopped"
+notify_stop="$RUNTIME_STATE_DIR/proxy-stop"
+notify_timer_exited="$RUNTIME_STATE_DIR/proxy-timer-exited"
 
 msg() {
   summary=$1
@@ -136,19 +137,19 @@ CLASH_BIN=$(command -v clash) || { clash_not_found; unlock proxy-daemon proxy-ma
 
 [ -e "$notify_start" ] && rm -f -- "$notify_start"
 [ -e "$notify_stop" ] && rm -f -- "$notify_stop"
-trap ': >"$notify_start"' USR2
 
-sudo $opt_askpass -- sh -c 'kill -s USR2 "$1"; shift 1; exec "$@"' -- \
-  "$$" "$CLASH_BIN" -d "$CLASH_CONFIG_HOME" &
+trap ':' USR2
+trap ': >"$notify_stop"' USR1 INT TERM
+
+sudo $opt_askpass -- sh -c ': >"$1"; kill -s USR2 "$2"; shift 2; exec "$@"' -- \
+  "$notify_start" "$$" "$CLASH_BIN" -d "$CLASH_CONFIG_HOME" &
 pid=$!
 
-trap ': >"$notify_stop"' USR1 INT
 [ -e "$daemonpidfile" ] && rm -- "$daemonpidfile"
 printf "%d\n" "$$" >"$daemonpidfile"
 
-trap '' HUP
 # wake up every 5 seconds to check whether there is any state changed.
-(trap 'exit 0' TERM; trap '' HUP; while sleep 5; do kill -s HUP "$$"; done)&
+(trap ': >"$notify_timer_exited"; exit 0' TERM; trap '' HUP; while sleep 5; do kill -s USR2 "$$"; done)&
 timerpid=$!
 
 unlock proxy-main
@@ -210,10 +211,11 @@ while :; do
 done
 
 kill "$timerpid"
-while :; do
+while [ ! -e "$notify_timer_exited" ]; do
   wait "$timerpid"
-  [ "$?" -gt 128 ] || break
 done
+
+rm -- "$notify_timer_exited"
 
 lock proxy-main
 rm -- "$daemonpidfile"
