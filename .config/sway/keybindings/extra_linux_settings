@@ -1,0 +1,8 @@
+include settings
+
+mode "settings" bindsym {
+  # Set wireless connection
+  $mod+period exec \"${XDG_CONFIG_HOME:-$HOME/.config}/sway/scripts/wifi-connect\"; mode "default"
+}
+
+# vim: ft=swayconfig

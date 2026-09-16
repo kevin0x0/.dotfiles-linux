@@ -1,0 +1,14 @@
+include launch
+
+mode "start" bindsym {
+  # Start proxy
+  $mod+p exec proxy-start-gui; mode "default"
+}
+
+# Kill
+mode "stop" bindsym {
+  # Kill proxy
+  $mod+p exec proxy-stop; mode "default"
+}
+
+# vim: ft=swayconfig
