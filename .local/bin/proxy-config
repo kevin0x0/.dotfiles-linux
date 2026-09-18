@@ -18,4 +18,5 @@ fi
 
 if ! curl -Ss -- "$CLASH_SUBSCRIPTION_URL" \
   | cat -- - "$CLASH_CONFIG_HOME/tun.yaml" >"$CLASH_CONFIG_HOME/config.yaml"; then
+  error "failed to download config from '$CLASH_SUBSCRIPTION_URL'"
 fi
