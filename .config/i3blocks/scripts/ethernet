@@ -85,7 +85,7 @@ if [ -n "$verbose" ] && [ "$status" = "UP:LOWER_UP" ]; then
   ip_address=$(ip -o -4 addr show "$interface" | awk '{print $4}')
   ip_address=${ip_address%%/??}
 
-  speed=$(cat "$en_sysdir/speed")
+  speed=$(cat "$dir/speed")
   if [ "$speed" -lt 0 ]; then
     speed=0
   fi
