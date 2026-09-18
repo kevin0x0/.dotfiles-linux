@@ -8,14 +8,8 @@ msg() {
 }
 
 instance_not_exists() {
-  summary=Failure
-  body="No running proxy instance"
-  case ${LC_ALL:-$LANG} in
-    zh_CN.UTF-8)
-      summary="失败"
-      body="没有正在运行的代理实例"
-      ;;
-  esac
+  summary=$(i18n -n proxy "Failure")
+  body=$(i18n -n proxy "No running proxy instance")
   msg "$summary" "$body" "2"
 }
 

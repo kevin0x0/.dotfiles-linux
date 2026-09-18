@@ -1,0 +1,26 @@
+# Failure
+> 失败
+# Success
+> 成功
+# Error
+> 错误
+# Unexpected behaviour
+> 异常行为
+# A proxy instance is already running
+> 已有代理实例在运行
+# Clash not found
+> Clash 未找到
+# Proxy stopped
+> 代理已停止
+# Proxy is started
+> 代理已启动
+# Proxy not started
+> 代理未启动
+# Proxy not stopped
+> 代理未停止
+# Proxy exited abnormally
+> 代理异常退出
+# Proxy exited normally
+> 代理静默退出
+# No running proxy instance
+> 没有正在运行的代理实例

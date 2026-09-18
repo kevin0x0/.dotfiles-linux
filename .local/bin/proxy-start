@@ -12,98 +12,50 @@ msg() {
 }
 
 instance_exists() {
-  summary=Failure
-  body="A proxy instance is already runing"
-  case ${LC_ALL:-$LANG} in
-    zh_CN.UTF-8)
-      summary="失败"
-      body="已有proxy实例在运行"
-      ;;
-  esac
+  summary=$(i18n -n proxy "Failure")
+  body=$(i18n -n proxy "A proxy instance is already running")
   msg "$summary" "$body" "2"
 }
 
 clash_not_found() {
-  summary=Failure
-  body="Clash not fould"
-  case ${LC_ALL:-$LANG} in
-    zh_CN.UTF-8)
-      summary="失败"
-      body="Clash 未找到"
-      ;;
-  esac
+  summary=$(i18n -n proxy "Failure")
+  body=$(i18n -n proxy "Clash not found")
   msg "$summary" "$body" "2"
 }
 
 proxy_stopped() {
-  summary="Success"
-  body="Proxy stopped"
-  case ${LC_ALL:-$LANG} in
-    zh_CN.UTF-8)
-      summary="成功"
-      body="代理已停止"
-      ;;
-  esac
+  summary=$(i18n -n proxy "Success")
+  body=$(i18n -n proxy "Proxy stopped")
   msg "$summary" "$body" "1"
 }
 
 proxy_started() {
-  summary="Success"
-  body="Proxy is started"
-  case ${LC_ALL:-$LANG} in
-    zh_CN.UTF-8)
-      summary="成功"
-      body="proxy 已启动"
-      ;;
-  esac
+  summary=$(i18n -n proxy "Success")
+  body=$(i18n -n proxy "Proxy is started")
   msg "$summary" "$body" "1"
 }
 
 proxy_not_started() {
-  summary="Failure"
-  body="Proxy not started"
-  case ${LC_ALL:-$LANG} in
-    zh_CN.UTF-8)
-      summary="失败"
-      body="代理未启动"
-      ;;
-  esac
+  summary=$(i18n -n proxy "Failure")
+  body=$(i18n -n proxy "Proxy not started")
   msg "$summary" "$body" "2"
 }
 
 proxy_not_stopped() {
-  summary="Failure"
-  body="Proxy not stopped"
-  case ${LC_ALL:-$LANG} in
-    zh_CN.UTF-8)
-      summary="失败"
-      body="代理未停止"
-      ;;
-  esac
+  summary=$(i18n -n proxy "Failure")
+  body=$(i18n -n proxy "Proxy not stopped")
   msg "$summary" "$body" "2"
 }
 
 proxy_crashed() {
-  summary="Error"
-  body="Proxy exited abnormally"
-  case ${LC_ALL:-$LANG} in
-    zh_CN.UTF-8)
-      summary="失败"
-      body="代理异常退出"
-      ;;
-  esac
+  summary=$(i18n -n proxy "Error")
+  body=$(i18n -n proxy "Proxy exited abnormally")
   msg "$summary" "$body" "2"
 }
 
 proxy_exited_normally() {
-  summary="Unexpected behaviour"
-  body="Proxy exited normally"
-  case ${LC_ALL:-$LANG} in
-    zh_CN.UTF-8)
-      summary="异常行为"
-      body="代理静默退出"
-      ;;
-  esac
+  summary=$(i18n -n proxy "Unexpected behaviour")
+  body=$(i18n -n proxy "Proxy exited normally")
   msg "$summary" "$body" "2"
 }
 

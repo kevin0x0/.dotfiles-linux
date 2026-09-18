@@ -4,20 +4,19 @@ wifi-connect-core menu-wrapper dmenu -v
 
 exitcode=$?
 
-summary=Failure
-[ "$LANG" = zh_CN.UTF-8 ] && summary="失败"
+summary=$(i18n -n wifi-connect "Failure")
 
 case "$exitcode" in
   64)
-    body="No wireless interface"
-    [ "$LANG" = zh_CN.UTF-8 ] && body="未找到无线设备接口"
-    notify-or-print -en wifi-connect -- "$summary" "$body"
+    notify-or-print -en wifi-connect -- \
+      "$summary" \
+      "$(i18n -n wifi-connect "No wireless interface")"
     exit 64
     ;;
   65)
-    body="Unable to create config file"
-    [ "$LANG" = zh_CN.UTF-8 ] && body="无法创建配置文件"
-    notify-or-print -en wifi-connect -- "$summary" "$body"
+    notify-or-print -en wifi-connect -- \
+      "$summary" \
+      "$(i18n -n wifi-connect "Unable to create config file")"
     exit 65
     ;;
 esac
