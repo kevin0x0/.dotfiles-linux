@@ -11,13 +11,13 @@ case "$exitcode" in
   64)
     body="No wireless interface"
     [ "$LANG" = zh_CN.UTF-8 ] && body="未找到无线设备接口"
-    notify-send "$summary" "$body" --app-name=wifi-connect --urgency=critical
+    notify-or-print -en wifi-connect -- "$summary" "$body"
     exit 64
     ;;
   65)
     body="Unable to create config file"
     [ "$LANG" = zh_CN.UTF-8 ] && body="无法创建配置文件"
-    notify-send "$summary" "$body" --app-name=wifi-connect --urgency=critical
+    notify-or-print -en wifi-connect -- "$summary" "$body"
     exit 65
     ;;
 esac

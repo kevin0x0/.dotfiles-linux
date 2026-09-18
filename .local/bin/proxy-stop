@@ -3,14 +3,8 @@
 daemonpidfile="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/proxy-daemon-pid"
 
 msg() {
-  summary=$1
-  body=$2
-  if command -v notify-send >/dev/null 2>&1 && [ -n "$DISPLAY$WAYLAND_DISPLAY" ]; then
-    [ "$3" = 2 ] && urgency=critical || urgency=normal
-    notify-send --app-name proxy-stop --urgency "$urgency" -- "$summary" "$body"
-  else
-    printf "%s: %s\n" "$summary" "$body" >&"${3:-1}"
-  fi
+  [ "$3" = 2 ] && level=-e || level=-m
+  notify-or-print "$level" -n proxy-stop -- "$1" "$2"
 }
 
 instance_not_exists() {
