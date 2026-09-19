@@ -17,6 +17,7 @@ lock proxy-main
 
 [ -f "$daemonpidfile" ] || { instance_not_exists; unlock proxy-main; exit 1; }
 
-kill -s USR1 "$(cat -- "$daemonpidfile")"
+notify-state 'proxy-stop'
+kill -s USR2 "$(cat -- "$daemonpidfile")"
 
 unlock proxy-main

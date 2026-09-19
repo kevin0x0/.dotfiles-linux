@@ -1,0 +1,39 @@
+#!/bin/sh
+
+# This script should be run as root
+# XDG_RUNTIME_DIR,PATH must agree with that of caller
+# Any process except proxy-start should not send signal to this script.
+# Sending a signal to clash directly (e.g. kill -9) is undefined behaviour
+# and may hang this wrapper, since wait keeps returning the reaped exit status.
+
+daemonpid=$1
+shift
+
+"$@" &
+proxypid=$!
+
+# clash handle SIGTERM elegantly ,exit with exitcode 0 
+trap 'kill "$proxypid"' TERM
+
+notify-state proxy-started
+kill -s USR2 "$daemonpid"
+
+while :; do
+  wait "$proxypid"
+  exitcode=$?
+  if [ "$exitcode" -gt 128 ]; then
+    continue
+  elif [ "$exitcode" -eq 0 ]; then
+    notify-state proxy-stopped
+    break
+  else
+    notify-state proxy-crashed
+    break
+  fi
+done
+
+while ! wait; do
+  :
+done
+
+kill -s USR2 "$daemonpid"
