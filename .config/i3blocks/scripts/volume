@@ -74,13 +74,13 @@ if [ "$mute" = off ]; then
 else
   color=$color_normal
   case "$average_volume" in
-    [0-3]?|[0-9])
+    [0123]?|[0123456789])
       icon=🔈
       ;;
-    [4-7]?)
+    [4567]?)
       icon=🔉
       ;;
-    [8-9]?|100)
+    [89]?|100)
       icon=🔊
       ;;
   esac
