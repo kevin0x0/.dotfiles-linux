@@ -48,7 +48,7 @@ fi
 
 status=$(printf "%s" "$dbus_response" \
   | jq -r '.data.[0].State.data' \
-  | LC_ALL=C tr 'a-z' 'A-Z')
+  | tr '[:lower:]' '[:upper:]')
 
 ssid=$(busctl --json short --system get-property \
   net.connman.iwd \

@@ -15,7 +15,7 @@ if [ -z "$bat_sysdir" ]; then
   return 0
 fi
 
-status=$(LC_ALL=C tr 'a-z' 'A-Z' <"$bat_sysdir/status")
+status=$(tr '[:lower:]' '[:upper:]' <"$bat_sysdir/status")
 
 charge_now=$(cat "$bat_sysdir/charge_now")
 charge_full_design=$(cat "$bat_sysdir/charge_full_design")
