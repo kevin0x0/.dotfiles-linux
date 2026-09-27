@@ -8,6 +8,12 @@ msg() {
   notify-or-print "$level" -n proxy-start -- "$1" "$2"
 }
 
+lock_failure() {
+  summary=$(i18n -n proxy "Failure")
+  body=$(i18n -n misc "Can not acquire lock")
+  msg "$summary" "$body" "2"
+}
+
 instance_exists() {
   summary=$(i18n -n proxy "Failure")
   body=$(i18n -n proxy "A proxy instance is already running")
@@ -72,7 +78,7 @@ while getopts "p" opts; do
   esac
 done
 
-lock proxy-main
+lock proxy-main || { lock_failure; exit 1; }
 trylock proxy-daemon || { instance_exists; unlock proxy-main; exit 1; }
 
 # This must be put before the sudo comamnd to create state directory as current user.
@@ -157,6 +163,6 @@ while ! wait; do
   :
 done
 
-lock proxy-main
+lock proxy-main || { lock_failure; exit 1; }
 rm -- "$daemonpidfile"
 unlock proxy-daemon proxy-main

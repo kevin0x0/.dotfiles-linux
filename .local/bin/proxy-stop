@@ -7,13 +7,19 @@ msg() {
   notify-or-print "$level" -n proxy-stop -- "$1" "$2"
 }
 
+lock_failure() {
+  summary=$(i18n -n proxy "Failure")
+  body=$(i18n -n misc "Can not acquire lock")
+  msg "$summary" "$body" "2"
+}
+
 instance_not_exists() {
   summary=$(i18n -n proxy "Failure")
   body=$(i18n -n proxy "No running proxy instance")
   msg "$summary" "$body" "2"
 }
 
-lock proxy-main
+lock proxy-main || { lock_failure; exit 1; }
 
 [ -f "$daemonpidfile" ] || { instance_not_exists; unlock proxy-main; exit 1; }
 
