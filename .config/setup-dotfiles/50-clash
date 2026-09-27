@@ -24,7 +24,7 @@ else
   clash_used=1
 fi
 
-check_config_eps() {
+check_config_deps() {
     helper_check_deps error "the following commands are required for configuring clash:" <<'EOF'
 curl transfer a URL
 EOF
