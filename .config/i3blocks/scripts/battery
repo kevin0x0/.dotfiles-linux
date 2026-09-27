@@ -12,7 +12,7 @@ done
 
 # No battery found. This is not an error, just skip this block.
 if [ -z "$bat_sysdir" ]; then
-  return 0
+  exit 0
 fi
 
 status=$(tr '[:lower:]' '[:upper:]' <"$bat_sysdir/status")
