@@ -8,7 +8,8 @@ if [ -z "$interface" ]; then
     wifi-connect-generate-config >"$configfile"
 
     if ! [ -f "$configfile" ]; then
-      echo "Unable to create config file" >&2
+      notify-or-print -en wifi-connect -- \
+        "$(i18n -n common "Failure")" "$(i18n -n wifi-connect "Unable to create config file")"
       exit 1
     fi
   fi

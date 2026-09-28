@@ -7,7 +7,8 @@ if ! [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/audioctl/alsa" ]; then
 
   audioctl.alsa-generate-config >"${XDG_CONFIG_HOME:-$HOME/.config}/audioctl/alsa"
   if ! [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/audioctl/alsa" ]; then
-    echo "Failed to create config file"
+    notify-or-print -en audioctl -- \
+      "$(i18n -n common "Failure")" "$(i18n -n audioctl "Failed to create config file")"
     exit 1
   fi
 fi
@@ -33,7 +34,8 @@ command_set() {
       amixer set "$CSWITCH" "$@"
       ;;
     *)
-      echo "Unknown command: $1"
+      notify-or-print -en audioctl -- \
+        "$(i18n -n common "Failure")" "$(i18n -n audioctl 'Unknown command: $1' "$1")"
       exit 1
       ;;
   esac
@@ -58,7 +60,8 @@ command_get() {
       amixer get "$CSWITCH"
       ;;
     *)
-      echo "Unknown command: $1"
+      notify-or-print -en audioctl -- \
+        "$(i18n -n common "Failure")" "$(i18n -n audioctl 'Unknown command: $1' "$1")"
       exit 1
       ;;
   esac
@@ -74,7 +77,8 @@ case "$1" in
     command_get "$@"
     ;;
   *)
-    echo "Unknown command: $1"
+    notify-or-print -en audioctl -- \
+      "$(i18n -n common "Failure")" "$(i18n -n audioctl 'Unknown command: $1' "$1")"
     exit 1
     ;;
 esac
