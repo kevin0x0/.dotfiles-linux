@@ -112,7 +112,7 @@ while :; do
   case "$state" in
     starting)
       if [ "$exitcode" -ne 0 ] && [ "$exitcode" -le 128 ]; then
-        proxy_crashed
+        proxy_not_started
         state=crashed
       elif notify-state -tc proxy-started; then
         proxy_started
