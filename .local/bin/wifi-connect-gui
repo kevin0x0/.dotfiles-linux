@@ -4,7 +4,7 @@ wifi-connect-core menu-wrapper dmenu -v
 
 exitcode=$?
 
-summary=$(i18n -n wifi-connect "Failure")
+summary=$(i18n -n common "Failure")
 
 case "$exitcode" in
   64)

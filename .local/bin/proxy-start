@@ -9,55 +9,55 @@ msg() {
 }
 
 lock_failure() {
-  summary=$(i18n -n proxy "Failure")
-  body=$(i18n -n misc "Can not acquire lock")
+  summary=$(i18n -n common "Failure")
+  body=$(i18n -n common "Can not acquire lock")
   msg "$summary" "$body" "2"
 }
 
 instance_exists() {
-  summary=$(i18n -n proxy "Failure")
+  summary=$(i18n -n common "Failure")
   body=$(i18n -n proxy "A proxy instance is already running")
   msg "$summary" "$body" "2"
 }
 
 clash_not_found() {
-  summary=$(i18n -n proxy "Failure")
+  summary=$(i18n -n common "Failure")
   body=$(i18n -n proxy "Clash not found")
   msg "$summary" "$body" "2"
 }
 
 proxy_stopped() {
-  summary=$(i18n -n proxy "Success")
+  summary=$(i18n -n common "Success")
   body=$(i18n -n proxy "Proxy stopped")
   msg "$summary" "$body" "1"
 }
 
 proxy_started() {
-  summary=$(i18n -n proxy "Success")
+  summary=$(i18n -n common "Success")
   body=$(i18n -n proxy "Proxy is started")
   msg "$summary" "$body" "1"
 }
 
 proxy_not_started() {
-  summary=$(i18n -n proxy "Failure")
+  summary=$(i18n -n common "Failure")
   body=$(i18n -n proxy "Proxy not started")
   msg "$summary" "$body" "2"
 }
 
 proxy_not_stopped() {
-  summary=$(i18n -n proxy "Failure")
+  summary=$(i18n -n common "Failure")
   body=$(i18n -n proxy "Proxy not stopped")
   msg "$summary" "$body" "2"
 }
 
 proxy_crashed() {
-  summary=$(i18n -n proxy "Error")
+  summary=$(i18n -n common "Error")
   body=$(i18n -n proxy "Proxy exited abnormally")
   msg "$summary" "$body" "2"
 }
 
 proxy_exited_normally() {
-  summary=$(i18n -n proxy "Unexpected behaviour")
+  summary=$(i18n -n common "Unexpected behaviour")
   body=$(i18n -n proxy "Proxy exited normally")
   msg "$summary" "$body" "2"
 }

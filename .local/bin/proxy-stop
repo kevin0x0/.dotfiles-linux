@@ -8,13 +8,13 @@ msg() {
 }
 
 lock_failure() {
-  summary=$(i18n -n proxy "Failure")
-  body=$(i18n -n misc "Can not acquire lock")
+  summary=$(i18n -n common "Failure")
+  body=$(i18n -n common "Can not acquire lock")
   msg "$summary" "$body" "2"
 }
 
 instance_not_exists() {
-  summary=$(i18n -n proxy "Failure")
+  summary=$(i18n -n common "Failure")
   body=$(i18n -n proxy "No running proxy instance")
   msg "$summary" "$body" "2"
 }
